@@ -1,0 +1,139 @@
+{
+  "artifacts": {
+    "events": "events.csv",
+    "hardware": "hardware.json",
+    "preflight": "preflight.json",
+    "samples": "samples.csv",
+    "storage_health_end": "storage-health-end.json",
+    "storage_health_start": "storage-health-start.json",
+    "storage_write_cliff_analysis": "storage/fio/cliff-write/seq_write-nvme0n1/write-cliff-analysis.json",
+    "summary": "summary.md",
+    "verdict": "verdict.json"
+  },
+  "overall": {
+    "claim_scope": "software-only",
+    "confidence": 0.4,
+    "confidence_factors": [
+      {
+        "code": "no_multimeter",
+        "penalty": 0.3,
+        "reason": "No multimeter readings were recorded for this run."
+      },
+      {
+        "code": "nvml_unavailable",
+        "penalty": 0.15,
+        "reason": "NVML telemetry was unavailable, reducing GPU rule coverage."
+      },
+      {
+        "code": "turbostat_unavailable",
+        "penalty": 0.1,
+        "reason": "turbostat was unavailable, reducing CPU telemetry coverage."
+      },
+      {
+        "code": "dut_disabled_storage",
+        "penalty": 0.05,
+        "reason": "STORAGE DUT was disabled for this run."
+      }
+    ],
+    "evidence": [
+      {
+        "event_ids": [],
+        "human_reason": "12V drift reached warning band (12.10V \u2192 11.54V).",
+        "observed": {
+          "drop_pct": 0.046525080571853616,
+          "load_min_v": 11.538,
+          "soak_median_v": 12.101
+        },
+        "rule_id": "power.rail_12v_drift.warn",
+        "source": "sample",
+        "status": "WARN",
+        "subsystem": "power",
+        "threshold": {
+          "fail_pct": 0.08,
+          "type": "percentage_drop_from_soak_median",
+          "warn_pct": 0.04
+        }
+      }
+    ],
+    "reasons": [
+      "[power] 12V drift reached warning band (12.10V \u2192 11.54V)."
+    ],
+    "status": "WARN"
+  },
+  "run": {
+    "bench_name": "synthetic-bench",
+    "ended_at": "2026-01-01T12:03:30+00:00",
+    "operator": "demo",
+    "profile_name": "synthetic-demo",
+    "profile_version": "0.1",
+    "protocol_version": "0.22",
+    "psu_lot": "LOT-DEMO",
+    "psu_make": "ExampleCo",
+    "psu_model": "EX-1000",
+    "psu_serial": "SYNTH-0001",
+    "psu_wattage": 1000,
+    "reason": "synthetic demo (warn)",
+    "started_at": "2026-01-01T12:00:00+00:00"
+  },
+  "storage_workload": {
+    "artifact": "storage/fio/cliff-write/seq_write-nvme0n1/write-cliff-analysis.json",
+    "baseline_loaded": false,
+    "classification": "single_cliff_stable_plateau",
+    "classification_label": "cliff stable",
+    "cliff_ratio": 0.23755599685336634,
+    "major_drop_count": 1,
+    "major_rise_count": 0,
+    "peak_window_avg_write_bw_kbps": 5891354.860620381,
+    "phase_name": "cliff-write",
+    "tail_window_median_kbps": 1399526.6767315997,
+    "tail_window_write_bw_cv": 0.0031737702973469177
+  },
+  "subsystems": {
+    "memory": {
+      "evidence": [],
+      "reasons": [],
+      "status": "PASS"
+    },
+    "pcie": {
+      "evidence": [],
+      "reasons": [],
+      "status": "PASS"
+    },
+    "power": {
+      "evidence": [
+        {
+          "event_ids": [],
+          "human_reason": "12V drift reached warning band (12.10V \u2192 11.54V).",
+          "observed": {
+            "drop_pct": 0.046525080571853616,
+            "load_min_v": 11.538,
+            "soak_median_v": 12.101
+          },
+          "rule_id": "power.rail_12v_drift.warn",
+          "source": "sample",
+          "status": "WARN",
+          "subsystem": "power",
+          "threshold": {
+            "fail_pct": 0.08,
+            "type": "percentage_drop_from_soak_median",
+            "warn_pct": 0.04
+          }
+        }
+      ],
+      "reasons": [
+        "12V drift reached warning band (12.10V \u2192 11.54V)."
+      ],
+      "status": "WARN"
+    },
+    "storage": {
+      "evidence": [],
+      "reasons": [],
+      "status": "PASS"
+    },
+    "thermal": {
+      "evidence": [],
+      "reasons": [],
+      "status": "PASS"
+    }
+  }
+}

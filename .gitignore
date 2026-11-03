@@ -1,0 +1,29 @@
+# Runtime output: never commit
+runs/
+psfu-data/
+tools/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Test / dev caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor / AI-tool local state
+.claude/
+.codex
+*.tmp.*
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/

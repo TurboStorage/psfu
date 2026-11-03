@@ -1,0 +1,37 @@
+{
+  "name": "storage-speed-verify-v1",
+  "version": "1.0.0",
+  "destructive": true,
+  "description": "Destructive NVMe speed+verify profile. Capacity-based sequential 2M write with 16 workers at QD8 each plus CRC32c verify. Optimized for throughput while doubling as a write-cliff, garbage-collection/folding, and sustained profiling detector. CAUTION: overwrites all data on the DUT. Requires --destructive flag and serial re-entry confirmation.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "15s idle baseline. SMART, OCP, and NVMe identity artifacts captured at run start."
+    },
+    {
+      "name": "speed-verify",
+      "duration_sec": 86400,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "Capacity-based sequential 2M write + CRC32c verify, 16 workers at QD8 each. Phase ends when fio finishes the device; 86400s is only a safety ceiling. High-speed destructive profiling for data integrity plus pSLC cliff / garbage collection / folding / sustained write collapse."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 180,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "3 min cooldown. SMART and OCP health captured at run end, compared to pre-run."
+    }
+  ]
+}

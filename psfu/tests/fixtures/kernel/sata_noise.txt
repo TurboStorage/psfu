@@ -1,0 +1,4 @@
+Apr 19 14:20:05 bench kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+Apr 19 14:20:05 bench kernel: ata1.00: failed command: WRITE FPDMA QUEUED
+Apr 19 14:20:05 bench kernel: sd 0:0:0:0: [sda] controller reset timeout, restarting
+Apr 19 14:20:06 bench kernel: scsi host0: async event registered

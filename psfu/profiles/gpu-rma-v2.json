@@ -1,0 +1,85 @@
+{
+  "name": "gpu-rma-v2",
+  "version": "2.0.0",
+  "description": "GPU-only PSU RMA load profile. CPU idle throughout — isolates 12V GPU rail(s). Four 7-min sustained windows separated by 30s idle drops for transient load-step evidence (8 edges total: 4 up, 4 down). Uses tensor cores + large VRAM matrix for max sustained power. No software power cap — expects native GPU TGP + documented transient spikes. Intended for 1000W+ benches where CPU is held idle to stay within envelope.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 60,
+      "cpu_mode": "idle",
+      "gpu_mode": "probe",
+      "mem_mode": "idle",
+      "notes": "60s idle baseline. Capture reference rail voltages, GPU temps/clocks, fan RPMs. Multimeter idle read goes here."
+    },
+    {
+      "name": "gpu-load-1",
+      "duration_sec": 420,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "mem_mode": "idle",
+      "gpu_burn_flags": ["-tc", "-m", "4096"],
+      "notes": "7 min GPU max load, CPU idle. Load-step up #1. Tensor cores + 4096 matrix — max power, max VRAM bandwidth."
+    },
+    {
+      "name": "idle-1",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "30s idle drop. Load-step down #1 — ~575W instantaneous drop on 12V GPU rail. Watch for overshoot, ringing, rail recovery time."
+    },
+    {
+      "name": "gpu-load-2",
+      "duration_sec": 420,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "mem_mode": "idle",
+      "gpu_burn_flags": ["-tc", "-m", "4096"],
+      "notes": "7 min GPU max load. Load-step up #2. Second sustained window — thermal hysteresis check vs cycle 1."
+    },
+    {
+      "name": "idle-2",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "30s idle. Load-step down #2."
+    },
+    {
+      "name": "gpu-load-3",
+      "duration_sec": 420,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "mem_mode": "idle",
+      "gpu_burn_flags": ["-tc", "-m", "4096"],
+      "notes": "7 min GPU max load. Load-step up #3. Third sustained window — capacitor fatigue starts showing here on marginal PSUs."
+    },
+    {
+      "name": "idle-3",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "30s idle. Load-step down #3."
+    },
+    {
+      "name": "gpu-load-4",
+      "duration_sec": 420,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "mem_mode": "idle",
+      "gpu_burn_flags": ["-tc", "-m", "4096"],
+      "notes": "7 min GPU max load. Load-step up #4. Final sustained window — if anything is going to droop from thermal soak, it shows by now."
+    },
+    {
+      "name": "recovery",
+      "duration_sec": 60,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "60s idle recovery. Rails should return to baseline within a few seconds. Drift vs baseline = marginal PSU. Multimeter post-test read goes here."
+    }
+  ]
+}

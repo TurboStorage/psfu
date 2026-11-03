@@ -1,0 +1,37 @@
+{
+  "name": "system-quick-v1",
+  "version": "1.0.0",
+  "description": "Quick system screening. 15s baseline, 10 min full blast, 2 min cooldown. Hit it hard, see if it lives.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "15s idle baseline. Reference temps and voltages."
+    },
+    {
+      "name": "full-load",
+      "duration_sec": 600,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "storage_mode": "stress",
+      "mem_target_pct": 65,
+      "notes": "10 min everything maxed. Screening profile — if it survives this, it's probably fine."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 120,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "2 min cooldown. Quick recovery check."
+    }
+  ]
+}

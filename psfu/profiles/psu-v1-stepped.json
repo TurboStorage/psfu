@@ -1,0 +1,154 @@
+{
+  "name": "psu-v1-stepped",
+  "version": "1.0.0",
+  "description": "Modified psu-v1: sustained phase replaced with isolated CPU step-up then GPU step-up (20% increments, 30s each). Phases 3+ unchanged from psu-v1. Tests PSU regulation under single-rail ramp, exposes step-response droop and transient compensation before hitting the full-sustained stress pattern.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "15s idle baseline. Capture reference rail voltages and temps for drift rules."
+    },
+    {
+      "name": "cpu-step-20",
+      "duration_sec": 30,
+      "cpu_mode": "stress",
+      "cpu_load_fraction": 0.2,
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "CPU at 20% — first rail-step. Watch 12V droop response."
+    },
+    {
+      "name": "cpu-step-40",
+      "duration_sec": 30,
+      "cpu_mode": "stress",
+      "cpu_load_fraction": 0.4,
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "CPU at 40%."
+    },
+    {
+      "name": "cpu-step-60",
+      "duration_sec": 30,
+      "cpu_mode": "stress",
+      "cpu_load_fraction": 0.6,
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "CPU at 60%."
+    },
+    {
+      "name": "cpu-step-80",
+      "duration_sec": 30,
+      "cpu_mode": "stress",
+      "cpu_load_fraction": 0.8,
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "CPU at 80%."
+    },
+    {
+      "name": "cpu-step-100",
+      "duration_sec": 30,
+      "cpu_mode": "stress",
+      "cpu_load_fraction": 1.0,
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "CPU at 100% — sustained ceiling on CPU-only rails."
+    },
+    {
+      "name": "cpu-gpu-settle",
+      "duration_sec": 5,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "5s all-idle. Lets CPU rails recover and settle before GPU ramp. Captures the step-down transient."
+    },
+    {
+      "name": "gpu-step-20",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "gpu_load_fraction": 0.2,
+      "mem_mode": "idle",
+      "notes": "GPU at 20% TDP (nvidia-smi -pl). First GPU-rail step."
+    },
+    {
+      "name": "gpu-step-40",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "gpu_load_fraction": 0.4,
+      "mem_mode": "idle",
+      "notes": "GPU at 40% TDP."
+    },
+    {
+      "name": "gpu-step-60",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "gpu_load_fraction": 0.6,
+      "mem_mode": "idle",
+      "notes": "GPU at 60% TDP."
+    },
+    {
+      "name": "gpu-step-80",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "gpu_load_fraction": 0.8,
+      "mem_mode": "idle",
+      "notes": "GPU at 80% TDP."
+    },
+    {
+      "name": "gpu-step-100",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "gpu_load_fraction": 1.0,
+      "mem_mode": "idle",
+      "notes": "GPU at 100% TDP — sustained ceiling on GPU-only rails."
+    },
+    {
+      "name": "rail-swap",
+      "duration_sec": 300,
+      "cpu_mode": "pulse",
+      "gpu_mode": "pulse",
+      "mem_mode": "stress",
+      "cpu_pulse_on_sec": 5,
+      "cpu_pulse_off_sec": 5,
+      "gpu_pulse_on_sec": 5,
+      "gpu_pulse_off_sec": 5,
+      "pulse_invert": ["gpu"],
+      "notes": "5 min out-of-phase — CPU loaded while GPU idles, then swap every 5s. Forces the PSU to rapidly shift which 12V rail group carries the load. Multi-rail PSUs are especially vulnerable to regulation crossover."
+    },
+    {
+      "name": "gpu-only",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "notes": "5 min GPU maxed, CPU idle. Asymmetric 12V loading — exposes weak regulation on GPU-side rails."
+    },
+    {
+      "name": "cpu-only",
+      "duration_sec": 300,
+      "cpu_mode": "stress",
+      "gpu_mode": "idle",
+      "mem_mode": "stress",
+      "notes": "5 min CPU maxed, GPU idle. Opposite asymmetry — sudden ~550W drop on GPU rails, full load on CPU rails."
+    },
+    {
+      "name": "transient",
+      "duration_sec": 300,
+      "cpu_mode": "pulse",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "cpu_pulse_on_sec": 1,
+      "cpu_pulse_off_sec": 1,
+      "notes": "5 min GPU pinned, CPU 1s on/off. ~350W transient at near-max load. One phase is enough — caps and feedback loops either handle it or they don't."
+    }
+  ]
+}

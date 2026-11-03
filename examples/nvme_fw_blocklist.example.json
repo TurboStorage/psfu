@@ -1,0 +1,5 @@
+{
+  "_comment": "Example NVMe firmware blocklist; copy to <baselines-dir>/nvme_fw_blocklist.json. Each entry fires nvme_oob_fw_version WARN when matched.",
+  "_schema": "1",
+  "entries": []
+}

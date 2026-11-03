@@ -1,0 +1,64 @@
+{
+  "name": "psu-v1",
+  "version": "1.1.0",
+  "description": "PSU RMA validation. Full sustained load, rail-swap (CPU/GPU out-of-phase), asymmetric isolation, one transient phase. Each phase tests a genuinely different failure path.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "15s idle baseline. Capture reference rail voltages and temps for drift rules."
+    },
+    {
+      "name": "full-sustained",
+      "duration_sec": 600,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "notes": "10 min max draw on all rails simultaneously. Kill test + OPP endurance + thermal soak. If it's going to trip, it trips here."
+    },
+    {
+      "name": "rail-swap",
+      "duration_sec": 300,
+      "cpu_mode": "pulse",
+      "gpu_mode": "pulse",
+      "mem_mode": "stress",
+      "cpu_pulse_on_sec": 5,
+      "cpu_pulse_off_sec": 5,
+      "gpu_pulse_on_sec": 5,
+      "gpu_pulse_off_sec": 5,
+      "pulse_invert": ["gpu"],
+      "notes": "5 min out-of-phase — CPU loaded while GPU idles, then swap every 5s. Forces the PSU to rapidly shift which 12V rail group carries the load. Multi-rail PSUs are especially vulnerable to regulation crossover."
+    },
+    {
+      "name": "gpu-only",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "notes": "5 min GPU maxed, CPU idle. Asymmetric 12V loading — exposes weak regulation on GPU-side rails."
+    },
+    {
+      "name": "cpu-only",
+      "duration_sec": 300,
+      "cpu_mode": "stress",
+      "gpu_mode": "idle",
+      "mem_mode": "stress",
+      "notes": "5 min CPU maxed, GPU idle. Opposite asymmetry — sudden ~550W drop on GPU rails, full load on CPU rails."
+    },
+    {
+      "name": "transient",
+      "duration_sec": 300,
+      "cpu_mode": "pulse",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "cpu_pulse_on_sec": 1,
+      "cpu_pulse_off_sec": 1,
+      "notes": "5 min GPU pinned, CPU 1s on/off. ~350W transient at near-max load. One phase is enough — caps and feedback loops either handle it or they don't."
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "storage-v1",
+  "version": "1.0.0",
+  "description": "Storage RMA validation. SSD-only workload: max controller throughput first, then sustained read endurance, then burst recovery testing. No CPU, GPU, or RAM stress.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "15s idle baseline. SMART health captured at run start."
+    },
+    {
+      "name": "full-load",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "5 min SSD kill test. Max read throughput only. Dead or failing NVMe shows errors fast without CPU/GPU/RAM load confounders."
+    },
+    {
+      "name": "sustained-read",
+      "duration_sec": 1200,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "20 min sustained SSD read endurance. Catches thermal throttling, firmware bugs, and bad blocks under continuous storage load."
+    },
+    {
+      "name": "burst",
+      "duration_sec": 600,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "pulse",
+      "notes": "10 min storage pulse on/off. Controller recovery under intermittent load. Catches marginal thermals and firmware/cache recovery bugs."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 180,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "3 min cooldown. SMART health captured at run end, compared to pre-run."
+    }
+  ]
+}

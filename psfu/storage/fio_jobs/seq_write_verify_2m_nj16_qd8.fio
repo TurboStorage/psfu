@@ -1,0 +1,22 @@
+; Sequential high-throughput write + read-back verify.
+; DESTRUCTIVE — overwrites the raw block device.
+; Tuned for speed profiling: 2M blocks, 16 workers, QD8 each. This is a
+; heavy sustained write path that also exposes pSLC cliff behaviour, garbage
+; collection / folding, and controller steady-state collapse while still
+; retaining CRC32c end-to-end verification.
+; verify_mismatches > 0 after this job = hard FAIL (fio_verify_mismatch rule).
+[global]
+ioengine=io_uring
+direct=1
+thread=1
+group_reporting=1
+verify=crc32c
+verify_backlog=512
+do_verify=1
+size=100%
+
+[speed_verify_2m_nj16_qd8]
+rw=write
+bs=2M
+iodepth=8
+numjobs=16

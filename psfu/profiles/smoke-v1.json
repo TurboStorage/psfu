@@ -1,0 +1,14 @@
+{
+  "name": "smoke-v1",
+  "version": "0.1",
+  "description": "Minimal collector smoke test with no intended load.",
+  "phases": [
+    {
+      "name": "soak",
+      "duration_sec": 30,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "notes": "Verify the collectors and output path."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "name": "ram-v1",
+  "version": "1.1.0",
+  "description": "RAM RMA validation. Kill test, cold March patterns, hot March patterns, concurrent CRC stress, randomized verify. EDAC counter monitoring throughout. Tests cell defects at ambient AND under thermal load.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "15s idle baseline. EDAC counters snapshotted at run start."
+    },
+    {
+      "name": "full-load",
+      "duration_sec": 300,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "mem_tool": "stressapptest",
+      "mem_target_pct": 85,
+      "notes": "5 min kill test. stressapptest CRC + full CPU/GPU thermal pressure. Gross defects and hard cell failures crash here."
+    },
+    {
+      "name": "cold-pattern",
+      "duration_sec": 1200,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "stress",
+      "mem_tool": "memtester",
+      "mem_target_pct": 80,
+      "notes": "20 min March-pattern test at ambient temp. memtester runs stuck-address, walking-ones/zeros, checkerboard against 80% of RAM. CPU/GPU idle to keep the bus clean — any error here is a hard cell defect, not contention or thermal."
+    },
+    {
+      "name": "hot-pattern",
+      "duration_sec": 1200,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "mem_tool": "memtester",
+      "mem_target_pct": 70,
+      "notes": "20 min March-pattern test under full thermal load. Same systematic algorithms as cold-pattern but with CPU/GPU heating the board. Catches thermally marginal cells that pass cold but fail hot — refresh failures, timing margin erosion. Lower RAM% (70%) because CPU/GPU need headroom."
+    },
+    {
+      "name": "contention",
+      "duration_sec": 1200,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "mem_tool": "stressapptest",
+      "mem_target_pct": 85,
+      "notes": "20 min concurrent CRC stress. Multi-threaded copy + write-CRC verify under full system load. Finds marginal DIMMs that pass pattern tests but fail under bus contention and PCIe DMA traffic."
+    },
+    {
+      "name": "random-verify",
+      "duration_sec": 600,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "mem_tool": "stress-ng",
+      "mem_target_pct": 75,
+      "notes": "10 min stress-ng VM with randomized write/read-back verification. Different pattern generation than memtester or stressapptest — catches faults the deterministic March algorithms might miss. --vm-populate forces upfront page allocation, --verify checks every read."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "5 min cooldown. EDAC delta snapshot — any CE = WARN (degrading DIMM), any UE = FAIL."
+    }
+  ]
+}

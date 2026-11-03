@@ -1,0 +1,66 @@
+{
+  "name": "system-full-v1",
+  "version": "1.0.0",
+  "description": "Full system RMA validation. Kill test first, then sustained endurance, transient pulse, and ramp. All subsystems exercised.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "15s idle baseline. Reference temps, clocks, voltages for drift rules."
+    },
+    {
+      "name": "full-load",
+      "duration_sec": 300,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "storage_mode": "stress",
+      "mem_target_pct": 70,
+      "notes": "5 min everything maxed. Kill test — any near-dead component crashes here."
+    },
+    {
+      "name": "steady",
+      "duration_sec": 1200,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "storage_mode": "stress",
+      "mem_target_pct": 70,
+      "notes": "20 min sustained endurance after surviving the kill phase."
+    },
+    {
+      "name": "transient",
+      "duration_sec": 600,
+      "cpu_mode": "pulse",
+      "gpu_mode": "pulse",
+      "mem_mode": "pulse",
+      "storage_mode": "pulse",
+      "mem_target_pct": 70,
+      "notes": "10 min 2s on/off pulse across all subsystems. Caps, feedback loops, marginal PSU."
+    },
+    {
+      "name": "ramp",
+      "duration_sec": 600,
+      "cpu_mode": "ramp",
+      "gpu_mode": "ramp",
+      "mem_mode": "ramp",
+      "mem_target_pct": 70,
+      "notes": "10 min step ramp 20-40-60-80-100%. VRM transient, PSU load transitions."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "5 min cooldown. Recovery check, baseline comparison."
+    }
+  ]
+}

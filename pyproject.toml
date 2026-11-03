@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psfu"
+version = "0.1.0"
+description = "Platform Stress & Failure Utility: stress and telemetry harness that turns 1 Hz sensor logs and kernel hardware errors into PASS/WARN/FAIL verdicts with evidence bundles."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Sean Webster" }]
+requires-python = ">=3.10"
+keywords = ["hardware", "stress-test", "nvme", "telemetry", "validation", "psu", "rma"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Benchmark",
+]
+# The core is standard-library only. Everything below is optional.
+dependencies = [
+    'windows-curses; sys_platform == "win32"',
+]
+
+[project.optional-dependencies]
+gpu = ["pynvml==11.5.3"]
+charts = ["matplotlib"]
+dev = ["pytest>=8", "pytest-cov", "ruff"]
+
+[project.scripts]
+psfu = "psfu.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["psfu*"]
+
+[tool.setuptools.package-data]
+psfu = ["profiles/*.json", "profiles/dev/*.json", "storage/fio_jobs/*.fio"]
+
+[tool.pytest.ini_options]
+testpaths = ["psfu/tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]

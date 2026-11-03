@@ -1,0 +1,55 @@
+{
+  "name": "storage-destructive-v1",
+  "version": "1.0.0",
+  "destructive": true,
+  "description": "Destructive NVMe RMA validation. Full-capacity write to flush SLC cache, then write+verify to catch data corruption, then mixed 70/30 QD32 for controller stability. CAUTION: overwrites all data on the DUT. Requires --destructive flag and serial re-entry confirmation.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "15s idle baseline. SMART and OCP health captured at run start."
+    },
+    {
+      "name": "full-write",
+      "duration_sec": 600,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "10 min sequential full-capacity write. Flushes SLC write cache. Forces FTL into steady-state TLC/QLC writes."
+    },
+    {
+      "name": "write-verify",
+      "duration_sec": 1200,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "20 min sequential write + CRC32c verify. Any verify_mismatches > 0 = FAIL (fio_verify_mismatch). Catches silent data corruption, bad blocks, FTL defects."
+    },
+    {
+      "name": "mixed-rw",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "5 min 70/30 random R/W at QD32. Controller stability under mixed load. Catches DRAM cache bugs and thermal collapse under sustained QD32."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 180,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "3 min cooldown. SMART and OCP health captured at run end, compared to pre-run."
+    }
+  ]
+}

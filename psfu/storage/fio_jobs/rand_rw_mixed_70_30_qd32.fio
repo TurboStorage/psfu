@@ -1,0 +1,19 @@
+; 70% random read / 30% random write, QD32.
+; DESTRUCTIVE — issues write IOs to the raw block device.
+; Mixed workload stress-tests controller scheduling, DRAM cache under mixed
+; read+write pressure, and thermal response under sustained QD32 load.
+; QD32 is the standard enterprise mixed workload depth (JESD219B).
+[global]
+ioengine=io_uring
+direct=1
+thread=1
+time_based=1
+runtime=300
+group_reporting=1
+
+[rand_rw_mixed_70_30]
+rw=randrw
+rwmixread=70
+bs=4k
+iodepth=32
+numjobs=1

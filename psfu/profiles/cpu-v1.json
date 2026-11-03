@@ -1,0 +1,72 @@
+{
+  "name": "cpu-v1",
+  "version": "1.0.0",
+  "description": "CPU RMA validation. Full-load kill test first, then isolates integer ALU, floating-point, cache, and VRM transient paths. GPU probe-only throughout.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "probe",
+      "mem_mode": "idle",
+      "notes": "15s idle baseline. Capture reference temps, clocks, voltages for drift rules."
+    },
+    {
+      "name": "full-load",
+      "duration_sec": 300,
+      "cpu_mode": "stress",
+      "gpu_mode": "probe",
+      "mem_mode": "stress",
+      "mem_load_fraction": 0.3,
+      "notes": "5 min all-core max stress. Kill test — near-dead CPU, VRM failure, thermal runaway all crash here. Don't waste 30 min to find out."
+    },
+    {
+      "name": "integer-alu",
+      "duration_sec": 600,
+      "cpu_mode": "stress",
+      "gpu_mode": "probe",
+      "mem_mode": "stress",
+      "mem_load_fraction": 0.3,
+      "cpu_stress_flags": ["--cpu-method", "matrixprod"],
+      "notes": "10 min integer matrix multiply. Exercises integer ALU pipelines, register file, integer scheduler."
+    },
+    {
+      "name": "floating-point",
+      "duration_sec": 600,
+      "cpu_mode": "stress",
+      "gpu_mode": "probe",
+      "mem_mode": "stress",
+      "mem_load_fraction": 0.3,
+      "cpu_stress_flags": ["--cpu-method", "fft"],
+      "notes": "10 min FFT. Exercises FP pipelines, SIMD/AVX units. Higher power draw on Zen than integer."
+    },
+    {
+      "name": "cache-stress",
+      "duration_sec": 600,
+      "cpu_mode": "stress",
+      "gpu_mode": "probe",
+      "mem_mode": "idle",
+      "cpu_stress_flags": ["--cache", "0"],
+      "notes": "10 min cache thrash. --cpu keeps ALUs busy while --cache workers hammer L1/L2/L3. Exercises coherency, MOESI, inter-CCD. RAM idle so cache misses don't alias as memory faults."
+    },
+    {
+      "name": "ramp",
+      "duration_sec": 600,
+      "cpu_mode": "ramp",
+      "gpu_mode": "probe",
+      "mem_mode": "stress",
+      "mem_load_fraction": 0.3,
+      "notes": "10 min ramp 20-40-60-80-100%. VRM transient response — marginal power delivery shows up during load transitions, not steady state."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "probe",
+      "mem_mode": "idle",
+      "notes": "5 min cooldown. Post-load errors, clock recovery, thermal hysteresis."
+    }
+  ]
+}

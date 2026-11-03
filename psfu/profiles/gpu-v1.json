@@ -1,0 +1,61 @@
+{
+  "name": "gpu-v1",
+  "version": "1.0.0",
+  "description": "GPU RMA validation. Full-load kill test first, then isolates FP32 CUDA cores, FP16/TF32 tensor cores, and FP64 double-precision paths. CPU at moderate load to keep PSU warm without masking GPU symptoms.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "probe",
+      "mem_mode": "idle",
+      "notes": "15s idle baseline. Capture reference temps, clocks, voltages for drift rules."
+    },
+    {
+      "name": "full-load",
+      "duration_sec": 300,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "gpu_burn_flags": ["-tc", "-m", "4096"],
+      "notes": "5 min tensor cores + large matrix. Kill test — max power, max VRAM bandwidth. Dead GPU crashes here."
+    },
+    {
+      "name": "fp32-cuda-cores",
+      "duration_sec": 480,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "gpu_burn_flags": [],
+      "notes": "8 min FP32 SGEMM on CUDA cores only. No tensor cores. Exercises the traditional shader/ALU pipeline."
+    },
+    {
+      "name": "fp16-tensor-cores",
+      "duration_sec": 480,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "gpu_burn_flags": ["-tc"],
+      "notes": "8 min FP16/TF32 tensor core GEMM. Max power draw. Dedicated matrix multiply units — where most AI/ML workloads live."
+    },
+    {
+      "name": "fp64-double-precision",
+      "duration_sec": 480,
+      "cpu_mode": "stress",
+      "gpu_mode": "stress",
+      "mem_mode": "stress",
+      "gpu_burn_flags": ["-d"],
+      "notes": "8 min FP64 DGEMM. Consumer GPUs have 1/64 FP64 throughput vs FP32 — lower power but isolates the double-precision path."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 300,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "notes": "5 min cooldown. Clock recovery, post-load AER check, thermal hysteresis."
+    }
+  ]
+}

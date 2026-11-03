@@ -1,0 +1,37 @@
+{
+  "name": "storage-cliff-v1",
+  "version": "1.0.0",
+  "destructive": true,
+  "description": "Destructive NVMe pSLC cliff characterization. Sequential write with 10 s fio bandwidth interval capture to expose cache exhaustion and sustained post-cliff write speed. CAUTION: overwrites all data on the DUT. Requires --destructive flag and serial re-entry confirmation.",
+  "bench_sustained_watts": 0,
+  "safety_factor": 1.0,
+  "phases": [
+    {
+      "name": "baseline",
+      "duration_sec": 15,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "15 s idle baseline. SMART, OCP, and NVMe identity artifacts captured at run start."
+    },
+    {
+      "name": "cliff-write",
+      "duration_sec": 1800,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "stress",
+      "notes": "30 min sequential write. fio status intervals are collapsed into 10 s windows to quantify the pSLC write cliff."
+    },
+    {
+      "name": "cooldown",
+      "duration_sec": 180,
+      "cpu_mode": "idle",
+      "gpu_mode": "idle",
+      "mem_mode": "idle",
+      "storage_mode": "idle",
+      "notes": "3 min cooldown. End-of-run SMART and OCP snapshots captured for comparison."
+    }
+  ]
+}
