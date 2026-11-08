@@ -16,7 +16,13 @@ import time
 from pathlib import Path
 from typing import Dict, List
 
-from psfu.common import command_exists, is_linux, utc_now
+from psfu.common import (
+    TURBOSTAT_SUDO_BIN_CANDIDATES,
+    command_exists,
+    is_linux,
+    turbostat_sudo_path,
+    utc_now,
+)
 from psfu.bootstrap.build_tools import (
     ensure_fio,
     ensure_gpu_burn,
@@ -143,10 +149,9 @@ _MSR_MODULES_FILE = Path("/etc/modules-load.d/msr.conf")
 # PATH-resolved: an attacker-influenced PATH that flips these to a
 # different binary would turn the sudoers rule into a privilege escalation.
 # If no candidate exists on disk, we refuse to write the rule.
-# Fedora/RHEL ship turbostat in /usr/sbin. Ubuntu/Debian ship it in /usr/bin
-# (symlinked from linux-tools-$(uname -r)). modprobe lives in /usr/sbin on
-# modern distros and /sbin on legacy layouts.
-_TURBOSTAT_SUDO_BIN_CANDIDATES = ("/usr/sbin/turbostat", "/usr/bin/turbostat")
+# turbostat: see TURBOSTAT_SUDO_BIN_CANDIDATES in psfu.common (secure_path
+# order, so a hand-built /usr/local/bin/turbostat is the one named). modprobe
+# lives in /usr/sbin on modern distros and /sbin on legacy layouts.
 _MODPROBE_SUDO_BIN_CANDIDATES = ("/usr/sbin/modprobe", "/sbin/modprobe")
 
 
@@ -160,9 +165,12 @@ def _msr_loaded() -> bool:
 
 def _turbostat_probe() -> bool:
     """Return True if turbostat can actually run right now (sudo + msr)."""
+    path = turbostat_sudo_path()
+    if not path:
+        return False
     try:
         r = subprocess.run(
-            ["sudo", "-n", "turbostat", "--show", "PkgWatt", "sleep", "0.1"],
+            ["sudo", "-n", path, "--show", "PkgWatt", "sleep", "0.1"],
             capture_output=True, timeout=5,
         )
         return r.returncode == 0
@@ -185,19 +193,17 @@ def ensure_turbostat_sudo(actions: List[object]) -> str:
     # turbostat_path and modprobe_path are HARDCODED absolute paths that will
     # appear in the sudoers NOPASSWD rule. We deliberately do not fall back to
     # shutil.which() here — PATH is attacker-influenceable on a shared bench.
-    turbostat_path = next(
-        (p for p in _TURBOSTAT_SUDO_BIN_CANDIDATES if os.path.exists(p)),
-        "",
-    )
+    turbostat_path = turbostat_sudo_path()
     modprobe_path = next(
         (p for p in _MODPROBE_SUDO_BIN_CANDIDATES if os.path.exists(p)),
         "",
     )
     if not turbostat_path:
         actions.append(
-            "turbostat not found at {} — CPU MHz/Busy%/PkgWatt unavailable "
-            "(refusing to write sudoers rule against a PATH-resolved path)".format(
-                " or ".join(_TURBOSTAT_SUDO_BIN_CANDIDATES)
+            "turbostat not found as a root-owned file at {} — CPU MHz/Busy%/PkgWatt "
+            "unavailable (refusing to write sudoers rule against a PATH-resolved "
+            "or user-writable path)".format(
+                " or ".join(TURBOSTAT_SUDO_BIN_CANDIDATES)
             )
         )
         return "unavailable"

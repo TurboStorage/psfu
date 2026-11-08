@@ -28,7 +28,7 @@ import subprocess
 import threading
 from typing import Dict, List, Optional, Tuple
 
-from psfu.common import command_exists
+from psfu.common import turbostat_sudo_path
 
 
 # Fallback sanity ceiling for Avg_MHz when cpufreq sysfs is absent.
@@ -140,7 +140,10 @@ class TurbostatCollector:
 
     def start(self) -> Optional[str]:
         """Start the turbostat subprocess.  Returns an error string on failure."""
-        if not command_exists("turbostat"):
+        # Same absolute path the sudoers rule names (psfu.common), so the
+        # call matches the rule even when PATH or secure_path differ.
+        ts_path = turbostat_sudo_path()
+        if not ts_path:
             return "turbostat not installed"
 
         # Try the v7 column set (adds CPU%c6 for deepest-C-state residency)
@@ -154,7 +157,7 @@ class TurbostatCollector:
         ):
             cmd = [
                 "sudo", "-n",  # non-interactive — fail immediately if password needed
-                "turbostat",
+                ts_path,
                 "--show", show,
                 "-i", str(self.interval),
             ]

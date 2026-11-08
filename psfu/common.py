@@ -25,6 +25,44 @@ def is_linux() -> bool:
     return sys.platform.startswith("linux")
 
 
+# Where turbostat may live, in the order of sudo's default secure_path
+# (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin). A hand-built turbostat
+# in /usr/local/bin shadows the distro one for `sudo turbostat`, so the sudoers
+# rule, the setup probe and the collector must all name the same absolute path.
+# Hardcoded, never PATH-resolved: a PATH an attacker can influence must not
+# pick the binary that the NOPASSWD rule names.
+TURBOSTAT_SUDO_BIN_CANDIDATES = (
+    "/usr/local/sbin/turbostat",
+    "/usr/local/bin/turbostat",
+    "/usr/sbin/turbostat",
+    "/usr/bin/turbostat",
+)
+
+
+def _root_owned_not_writable(path: str) -> bool:
+    """True if path and every parent folder are owned by root and not
+    writable by group or others (a user-writable binary in a NOPASSWD rule
+    would be a root shell)."""
+    p = Path(path)
+    for item in [p] + list(p.parents):
+        try:
+            st = os.stat(item)
+        except OSError:
+            return False
+        if st.st_uid != 0 or st.st_mode & 0o022:
+            return False
+    return True
+
+
+def turbostat_sudo_path() -> str:
+    """Absolute path of the turbostat that `sudo turbostat` runs, or "" if
+    none of the candidates exists as a safe, root-owned file."""
+    for cand in TURBOSTAT_SUDO_BIN_CANDIDATES:
+        if os.path.isfile(cand):
+            return cand if _root_owned_not_writable(cand) else ""
+    return ""
+
+
 def shell_join(args: List[str]) -> str:
     return " ".join(args)
 
