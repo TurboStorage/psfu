@@ -258,8 +258,21 @@ def ensure_turbostat_sudo(actions: List[object]) -> str:
         )
         return "unavailable"
 
-    rule = "{user} ALL=(ALL) NOPASSWD: {turbostat}, {modprobe} msr".format(
-        user=user, turbostat=turbostat_path, modprobe=modprobe_path,
+    # Exact argument forms only (see collectors/turbostat.py and
+    # _turbostat_probe). A bare path would let `sudo turbostat <anything>` run
+    # as root, including turbostat's trailing "command" form. Commas in
+    # sudoers arguments must be escaped.
+    ts_args = [
+        "--show {} -i 1.0".format(cols.replace(",", "\\,"))
+        for cols in (
+            "Core,CPU,Avg_MHz,Busy%,CorWatt,PkgWatt,CPU%c6",
+            "Core,CPU,Avg_MHz,Busy%,CorWatt,PkgWatt",
+        )
+    ] + ["--show PkgWatt sleep 0.1"]
+    rule = "{user} ALL=(ALL) NOPASSWD: {ts}, {modprobe} msr".format(
+        user=user,
+        ts=", ".join("{} {}".format(turbostat_path, a) for a in ts_args),
+        modprobe=modprobe_path,
     )
     print()
     print("=" * 60)

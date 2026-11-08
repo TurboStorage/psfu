@@ -86,6 +86,11 @@ GPU_BURN_PINNED_REF: Optional[str] = None     # set to commit SHA
 GPU_BURN_PINNED_SHA: Optional[str] = None     # set to same SHA for verify
 STRESS_NG_PINNED_REF: Optional[str] = None    # set to release tag e.g. "V0.17.08"
 STRESS_NG_PINNED_SHA: Optional[str] = None    # resolved SHA of that tag
+# Kernel-module repos are built and installed with root; both are pinned.
+# Pins are the upstream HEAD as of 2026-11-07 (taken with git ls-remote, not
+# independently reviewed). Bump together with a code review of the diff.
+IT87_PINNED_SHA = "bd7a566c8a60fe0308d67e26761e16260368191a"
+NCT6687D_PINNED_SHA = "49ac9bced1771e73b9d5e3d50d5167167548efd4"
 
 
 def _verify_pinned_sha(repo_dir: "Path", expected_sha: Optional[str], tool: str, actions: List[object]) -> bool:
@@ -115,6 +120,20 @@ def _verify_pinned_sha(repo_dir: "Path", expected_sha: Optional[str], tool: str,
         return False
     actions.append("{}: verified pinned SHA {}".format(tool, actual[:12]))
     return True
+
+
+def _clone_pinned(url: str, repo_dir: "Path", sha: str, tool: str, actions: List[object]) -> bool:
+    """Clone (if missing) and check out the pinned commit; verify HEAD."""
+    if not repo_dir.exists():
+        code, _, err = run_capture_env(["git", "clone", url, str(repo_dir)], timeout=1800)
+        actions.append("git clone {} -> {}".format(tool, "ok" if code == 0 else err or code))
+        if code != 0:
+            return False
+        code, _, err = run_capture_env(["git", "checkout", "--detach", sha], timeout=60, cwd=repo_dir)
+        if code != 0:
+            actions.append("{}: git checkout {} failed ({})".format(tool, sha[:12], err or code))
+            return False
+    return _verify_pinned_sha(repo_dir, sha, tool, actions)
 
 
 # ---------------------------------------------------------------------------
@@ -856,22 +875,18 @@ def _try_it87_fork(actions: List[str]) -> bool:
         ["git", "build-essential", "dkms", "dh-dkms", "linux-headers-{}".format(platform.release())],
         actions,
     )
-    if not repo_dir.exists():
-        code, _, err = run_capture_env(
-            ["git", "clone", "https://github.com/frankcrawford/it87.git", str(repo_dir)],
-            timeout=1800,
-        )
-        actions.append("git clone frankcrawford/it87 -> {}".format("ok" if code == 0 else err or code))
-        if code != 0:
-            return False
+    if not _clone_pinned("https://github.com/frankcrawford/it87.git", repo_dir, IT87_PINNED_SHA, "it87", actions):
+        return False
+
+    # Build as the user; sudo is only for the install step below.
+    code, _, err = run_capture_env(["make"], timeout=600, cwd=repo_dir)
+    actions.append("make it87 (as user) -> {}".format("ok" if code == 0 else err or code))
+    if code != 0:
+        return False
 
     code, _, err = run_capture_env(sudo_prefix() + ["make", "dkms"], timeout=3600, cwd=repo_dir)
     actions.append("make dkms it87 -> {}".format("ok" if code == 0 else err or code))
     if code != 0:
-        code, _, err = run_capture_env(["make"], timeout=600, cwd=repo_dir)
-        actions.append("make it87 (in-tree fallback) -> {}".format("ok" if code == 0 else err or code))
-        if code != 0:
-            return False
         code, _, err = run_capture_env(sudo_prefix() + ["insmod", "./it87.ko", "force_id=0x8689"], timeout=60, cwd=repo_dir)
         actions.append("insmod it87.ko force_id=0x8689 -> {}".format("ok" if code == 0 else err or code))
         if code != 0:
@@ -899,14 +914,13 @@ def _try_nct6687d(actions: List[str]) -> bool:
 
     repo_dir = TOOLS_DIR / "nct6687d"
     TOOLS_DIR.mkdir(parents=True, exist_ok=True)
-    if not repo_dir.exists():
-        code, _, err = run_capture_env(
-            ["git", "clone", "https://github.com/Fred78290/nct6687d.git", str(repo_dir)],
-            timeout=1800,
-        )
-        actions.append("git clone nct6687d -> {}".format("ok" if code == 0 else err or code))
-        if code != 0:
-            return False
+    if not _clone_pinned("https://github.com/Fred78290/nct6687d.git", repo_dir, NCT6687D_PINNED_SHA, "nct6687d", actions):
+        return False
+    # Build as the user first; sudo only installs.
+    code, _, err = run_capture_env(["make"], timeout=600, cwd=repo_dir)
+    actions.append("make nct6687d (as user) -> {}".format("ok" if code == 0 else err or code))
+    if code != 0:
+        return False
     code, _, err = run_capture_env(sudo_prefix() + ["make", "dkms_install"], timeout=3600, cwd=repo_dir)
     actions.append("make dkms_install nct6687d -> {}".format("ok" if code == 0 else err or code))
     if code != 0:
